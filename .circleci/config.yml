@@ -270,7 +270,6 @@ jobs:
       # Here's where you will add some code to rollback on failure
       - destroy-environment
             
-
   run-migrations:
     docker:
       # Docker image here that supports NodeJS
@@ -295,8 +294,7 @@ jobs:
             fi
       # Here's where you will add some code to rollback on failure 
       - destroy-environment
-      - revert-migrations
-          
+      - revert-migrations 
 
   # deploy-frontend:
   #   docker:
