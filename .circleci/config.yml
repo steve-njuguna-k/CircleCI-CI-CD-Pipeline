@@ -148,43 +148,48 @@ jobs:
             npm install --force
             npm audit fix --audit-level=critical --force
 
-  deploy-infrastructure:
+  configure-infrastructure:
     docker:
-      - image: cimg/base:stable
+       - image: python:3.7-alpine3.11
     steps:
       - checkout
-      - install_awscli
+      - add_ssh_keys:
+          fingerprints: ["c9:40:ea:39:ca:65:dc:b0:b9:be:75:90:fc:9c:72:04"]
+      - attach_workspace:
+          at: ~/
       - run:
-          name: Ensure back-end infrastructure exists
+          name: Install dependencies
+          working_directory: ./.circleci/ansible
           command: |
-            aws cloudformation deploy \
-              --template-file .circleci/files/backend.yml \
-              --tags project=udapeople \
-              --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
+            apk add --update ansible curl rsync openssh nodejs npm
       - run:
-          name: Ensure front-end infrastructure exist
+          name: Install aws cli
           command: |
-            aws cloudformation deploy \
-              --template-file .circleci/files/frontend.yml \
-              --tags project=udapeople \
-              --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
+            pip install awscli
       - run:
-          name: Add back-end ip to ansible inventory
+          name: Configure server
           command: |
-            BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
-              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --output text)
-            echo $BACKEND_PUBLIC_IP >> .circleci/ansible/inventory.txt
-            cat .circleci/ansible/inventory.txt
+            touch backend/.env
+            echo NODE_ENV=production >> backend/.env
+            echo TYPEORM_CONNECTION=postgres >> backend/.env
+            echo TYPEORM_MIGRATIONS_DIR=/home/ubuntu/udaapp/migrations  >> backend/.env
+            echo TYPEORM_MIGRATIONS=/home/ubuntu/udaapp/migrations/*.js >> backend/.env
+            echo TYPEORM_ENTITIES=/home/ubuntu/udaapp/modules/domain/**/*.entity.js >> backend/.env
+            echo TYPEORM_HOST=database-2.cjip2vcmn4xa.us-east-1.rds.amazonaws.com >> backend/.env
+            echo TYPEORM_PORT=5432 >> backend/.env
+            echo TYPEORM_USERNAME=postgres >> backend/.env
+            echo TYPEORM_PASSWORD=postgres >> backend/.env
+            echo TYPEORM_DATABASE=postgres >> backend/.env
+            cat backend/.env
+            cd .circleci/ansible
+            cat inventory.txt
+            ansible-playbook -i inventory.txt configure-server.yml
       - persist_to_workspace:
           root: ~/
           paths:
-            - project/.circleci/ansible/inventory.txt
-      
-      - destroy-environment
+            - project/backend/.env
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
   configure-infrastructure:
     docker:
