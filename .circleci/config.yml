@@ -183,49 +183,31 @@ jobs:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
-      
       - destroy-environment
-
+  
   configure-infrastructure:
     docker:
-       - image: python:3.7-alpine3.11
+      # Docker image here that supports Ansible
+      - image: cimg/base:stable
     steps:
+      # Checkout code from git
       - checkout
+      - install_ansible
+      - install_awscli
+      # Add ssh keys with fingerprint
       - add_ssh_keys:
-          fingerprints: ["f6:79:5d:d1:c1:42:e7:e1:9b:90:75:c4:12:94:ea:40"]
+         fingerprints: ["c9:40:ea:39:ca:65:dc:b0:b9:be:75:90:fc:9c:72:04"]
+    # attach workspace
       - attach_workspace:
           at: ~/
       - run:
-          name: Install dependencies
-          working_directory: ./.circleci/ansible
-          command: |
-            apk add --update ansible curl rsync openssh nodejs npm
-      - run:
-          name: Install aws cli
-          command: |
-            pip install awscli
-      - run:
           name: Configure server
           command: |
-            touch backend/.env
-            echo NODE_ENV=production >> backend/.env
-            echo TYPEORM_CONNECTION=postgres >> backend/.env
-            echo TYPEORM_MIGRATIONS_DIR=/home/ubuntu/udaapp/migrations  >> backend/.env
-            echo TYPEORM_MIGRATIONS=/home/ubuntu/udaapp/migrations/*.js >> backend/.env
-            echo TYPEORM_ENTITIES=/home/ubuntu/udaapp/modules/domain/**/*.entity.js >> backend/.env
-            echo TYPEORM_HOST=database-2.cjip2vcmn4xa.us-east-1.rds.amazonaws.com >> backend/.env
-            echo TYPEORM_PORT=5432 >> backend/.env
-            echo TYPEORM_USERNAME=postgres >> backend/.env
-            echo TYPEORM_PASSWORD=postgres >> backend/.env
-            echo TYPEORM_DATABASE=postgres >> backend/.env
-            cat backend/.env
+            # Your code here
             cd .circleci/ansible
             cat inventory.txt
             ansible-playbook -i inventory.txt configure-server.yml
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - project/backend/.env
+      # Here's where you will add some code to rollback on failure
       - destroy-environment
             
   run-migrations:
