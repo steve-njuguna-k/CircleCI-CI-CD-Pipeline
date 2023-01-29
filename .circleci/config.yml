@@ -281,6 +281,11 @@ jobs:
           command: |
             # Your code here
             cd backend
+
+            npm config delete proxy
+            npm config delete http-proxy
+            npm config delete https-proxy
+            
             npm install --force
             npm run migrations > migrations_dump.txt
       - run:
