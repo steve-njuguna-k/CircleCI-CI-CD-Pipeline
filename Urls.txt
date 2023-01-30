@@ -1,7 +1,7 @@
-1. URL01
+1. [URL01]
 
-https://github.com/Bernado6/project3-CI-CD
+https://github.com/steve-njuguna-k/ALX-Project-3-CI-CD
 
-2. URL01: Public URL for your S3 Bucket(green candidate front-end) link
+2. [URL02]
 
-http://udapeople-25fd1c0.s3-website-us-east-1.amazonaws.com
+http://udapeople-1c8bb1b.s3-website-us-east-1.amazonaws.com/
