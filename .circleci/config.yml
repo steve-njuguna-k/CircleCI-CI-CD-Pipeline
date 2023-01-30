@@ -133,7 +133,6 @@ jobs:
             cd frontend
             npm install --force
             npm audit fix --audit-level=critical --force
-
   scan-backend:
     docker:
       - image: cimg/node:13.8.0
@@ -147,7 +146,6 @@ jobs:
             cd backend
             npm install --force
             npm audit fix --audit-level=critical --force
-
   deploy-infrastructure:
     docker:
       - image: cimg/base:stable
@@ -184,7 +182,6 @@ jobs:
           paths:
             - project/.circleci/ansible/inventory.txt
       - destroy-environment
-  
   configure-infrastructure:
     docker:
       - image: cimg/base:stable
@@ -202,14 +199,11 @@ jobs:
             cd .circleci/ansible
             cat inventory.txt
             ansible-playbook -i inventory.txt configure-server.yml
-      - destroy-environment
-            
+      - destroy-environment         
   run-migrations:
     docker:
-      # Docker image here that supports NodeJS
       - image: circleci/node:13.8.0
     steps:
-      # Checkout code from git
       - checkout
       - run:
           name: Run migrations
@@ -226,17 +220,13 @@ jobs:
             then
               curl https://kvdb.io/14qV1F64XYqNDSAAyhW75u/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
-            
-      # Here's where you will add some code to rollback on failure 
       - destroy-environment
       - revert-migrations 
 
   deploy-frontend:
     docker:
-      # Docker image here that supports AWS CLI
        - image: cimg/base:stable
     steps:
-      # Checkout code from git
       - checkout
       - install_awscli
       - install_nodejs
@@ -256,7 +246,6 @@ jobs:
               --output text)
             echo "API_URL=http://${BACKEND_PUBLIC_IP}:3030" >> frontend/.env
             echo $(cat frontend/.env)
-
       - persist_to_workspace:
             root: ~/
             paths:
@@ -269,24 +258,18 @@ jobs:
             npm install
             npm run build
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
-      # Here's where you will add some code to rollback on failure 
       - destroy-environment
-      - revert-migrations
-                            
+      - revert-migrations                  
   deploy-backend:
     docker:
-      # Docker image here that supports Ansible
       - image: cimg/base:stable
     steps:
-      # Checkout code from git
       - checkout
       - install_awscli
       - install_ansible
       - install_nodejs
-      # Add ssh keys with fingerprint
       - add_ssh_keys:
          fingerprints: ["c9:40:ea:39:ca:65:dc:b0:b9:be:75:90:fc:9c:72:04"]
-      # attach workspace
       - attach_workspace:
           at: ~/
       - restore_cache:
@@ -316,18 +299,15 @@ jobs:
             export TYPEORM_MIGRATIONS=./migrations/*.ts
             cd .circleci/ansible
             cat inventory.txt
-            ansible-playbook -i inventory.txt deploy-backend.yml
-      # Here's where you will add some code to rollback on failure  
+            ansible-playbook -i inventory.txt deploy-backend.yml 
       - destroy-environment
       - revert-migrations
       # - failure_notification
       
   smoke-test:
     docker:
-      # Lightweight Docker image
       - image: cimg/base:stable 
     steps:
-      # Checkout code from git
       - checkout
       - install_nodejs
       - install_awscli
@@ -360,17 +340,13 @@ jobs:
               exit 0
             else
               exit 1
-            fi
-      # Here's where you will add some code to rollback on failure  
+            fi 
       - destroy-environment
       - revert-migrations
-
   cloudfront-update:
     docker:
-      # Docker image here that supports AWS CLI
       - image: cimg/base:stable
     steps:
-      # Checkout code from git
       - checkout
       - install_awscli
       - install_nodejs
@@ -391,16 +367,13 @@ jobs:
               --template-file .circleci/files/cloudfront.yml \
               --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
               --stack-name InitialStack
-      # Here's where you will add some code to rollback on failure  
       - destroy-environment
       - revert-migrations
       
   cleanup:
     docker:
-      # Docker image here
       - image: cimg/base:stable
     steps:
-      # Checkout code from git
       - checkout
       - install_awscli
       - install_nodejs
